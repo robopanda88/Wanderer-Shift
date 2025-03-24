@@ -98,7 +98,7 @@ function TaskItem({ task, onToggle, onSelect, isSelected }: TaskItemProps) {
     <div
       className={cn(
         "glass-card p-4 transition-all duration-200 cursor-pointer",
-        isSelected ? "bg-white/10 border-white/20" : "hover:bg-white/5"
+        isSelected ? "bg-primary/20 border-primary/30" : "hover:bg-secondary/20"
       )}
       onClick={() => onSelect(task)}
     >
@@ -115,26 +115,26 @@ function TaskItem({ task, onToggle, onSelect, isSelected }: TaskItemProps) {
           {task.completed ? (
             <CheckCircle2 className="h-5 w-5 text-green-400" />
           ) : (
-            <Circle className="h-5 w-5 text-gray-400" />
+            <Circle className="h-5 w-5 text-muted-foreground" />
           )}
         </Button>
         
         <div className="flex-1">
           <p className={cn(
             "text-sm",
-            task.completed ? "text-gray-400 line-through" : "text-white"
+            task.completed ? "text-muted-foreground line-through" : "text-foreground"
           )}>
             {task.title}
           </p>
           {task.locationName && (
             <div className="flex items-center gap-1 mt-1">
-              <MapPin className="h-3 w-3" style={{ color: task.markerColor }} />
-              <span className="text-xs text-gray-400">{task.locationName}</span>
+              <MapPin className="h-3 w-3" style={{ color: task.markerColor || '#00D4FF' }} />
+              <span className="text-xs text-muted-foreground">{task.locationName}</span>
             </div>
           )}
         </div>
         
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-muted-foreground">
           {format(new Date(task.dueDate), 'HH:mm')}
         </span>
       </div>

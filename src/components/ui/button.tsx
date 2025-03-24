@@ -9,15 +9,15 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
+          "bg-slate-100 text-slate-900 shadow hover:bg-slate-100/90",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "bg-red-500 text-white shadow-sm hover:bg-red-500/90",
         outline:
-          "border border-input bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-white/10 bg-transparent shadow-sm hover:bg-slate-800/80",
         secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-slate-800 text-slate-100 shadow-sm hover:bg-slate-800/80",
+        ghost: "hover:bg-slate-800 hover:text-slate-100",
+        link: "text-slate-100 underline-offset-4 hover:underline",
         glass: "glass-card hover:bg-white/10 transition-all duration-300",
         neomorphic: "neomorphic hover:shadow-[12px_12px_24px_rgba(0,0,0,0.2),-12px_-12px_24px_rgba(255,255,255,0.05)] transition-all duration-300",
       },
