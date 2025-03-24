@@ -1,12 +1,11 @@
-'use client';
-
 import React, { useState } from 'react';
 import { format, isToday } from 'date-fns';
 import { CheckCircle2, Circle, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import { Task } from '@/types';
-import { Paper, Text, Stack, Group, Box, Collapse, ActionIcon, Card, UnstyledButton } from '@mantine/core';
 import { motion } from 'framer-motion';
-import clsx from 'clsx';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface TodoSectionProps {
   tasks: Task[];
@@ -22,67 +21,68 @@ export default function TodoSection({ tasks, onTaskToggle, onTaskSelect, selecte
   const futureTasks = tasks.filter(task => !isToday(new Date(task.dueDate)));
 
   return (
-    <Paper radius="lg" p="lg" withBorder shadow="sm">
-      <Stack>
-        <Text size="xl" fw={600}>Today's Tasks</Text>
-        <Stack gap="xs">
-          {todayTasks.map((task, index) => (
-            <motion.div
-              key={task.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <TaskItem
-                task={task}
-                onToggle={onTaskToggle}
-                onSelect={onTaskSelect}
-                isSelected={selectedTask?.id === task.id}
-              />
-            </motion.div>
-          ))}
-        </Stack>
+    <div className="neomorphic p-6 rounded-xl">
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold text-white">Today's Tasks</h2>
+        <ScrollArea className="h-[300px] pr-4">
+          <div className="space-y-3">
+            {todayTasks.map((task, index) => (
+              <motion.div
+                key={task.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+              >
+                <TaskItem
+                  task={task}
+                  onToggle={onTaskToggle}
+                  onSelect={onTaskSelect}
+                  isSelected={selectedTask?.id === task.id}
+                />
+              </motion.div>
+            ))}
+          </div>
 
-        {futureTasks.length > 0 && (
-          <Stack mt="md">
-            <UnstyledButton
-              onClick={() => setShowFutureTasks(!showFutureTasks)}
-              className="hover:bg-gray-100 rounded-md p-2 transition-colors w-full text-left"
-            >
-              <Group>
-                <Text>Upcoming Tasks</Text>
+          {futureTasks.length > 0 && (
+            <div className="mt-6 space-y-3">
+              <Button
+                variant="ghost"
+                onClick={() => setShowFutureTasks(!showFutureTasks)}
+                className="w-full justify-between"
+              >
+                <span>Upcoming Tasks</span>
                 <motion.div
                   animate={{ rotate: showFutureTasks ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <ChevronDown size={16} />
+                  <ChevronDown className="h-4 w-4" />
                 </motion.div>
-              </Group>
-            </UnstyledButton>
+              </Button>
 
-            <Collapse in={showFutureTasks}>
-              <Stack gap="xs" mt="xs">
-                {futureTasks.map((task, index) => (
-                  <motion.div
-                    key={task.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                  >
-                    <TaskItem
-                      task={task}
-                      onToggle={onTaskToggle}
-                      onSelect={onTaskSelect}
-                      isSelected={selectedTask?.id === task.id}
-                    />
-                  </motion.div>
-                ))}
-              </Stack>
-            </Collapse>
-          </Stack>
-        )}
-      </Stack>
-    </Paper>
+              {showFutureTasks && (
+                <div className="space-y-3 mt-3">
+                  {futureTasks.map((task, index) => (
+                    <motion.div
+                      key={task.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <TaskItem
+                        task={task}
+                        onToggle={onTaskToggle}
+                        onSelect={onTaskSelect}
+                        isSelected={selectedTask?.id === task.id}
+                      />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </ScrollArea>
+      </div>
+    </div>
   );
 }
 
@@ -95,51 +95,49 @@ interface TaskItemProps {
 
 function TaskItem({ task, onToggle, onSelect, isSelected }: TaskItemProps) {
   return (
-    <Card
-      withBorder
-      padding="sm"
-      className={clsx(
-        'w-full transition-all duration-200 hover:shadow-md',
-        isSelected ? 'bg-blue-50 border-blue-200' : 'hover:bg-gray-50'
+    <div
+      className={cn(
+        "glass-card p-4 transition-all duration-200 cursor-pointer",
+        isSelected ? "bg-white/10 border-white/20" : "hover:bg-white/5"
       )}
+      onClick={() => onSelect(task)}
     >
-      <UnstyledButton onClick={() => onSelect(task)} className="w-full">
-        <Group>
-          <ActionIcon
-            component="div"
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle(task.id);
-            }}
-            variant="subtle"
-            color={task.completed ? 'green' : 'gray'}
-            className="transition-transform hover:scale-110"
-          >
-            {task.completed ? <CheckCircle2 size={20} /> : <Circle size={20} />}
-          </ActionIcon>
-          
-          <div style={{ flex: 1 }}>
-            <Text
-              style={{
-                textDecoration: task.completed ? 'line-through' : 'none',
-                color: task.completed ? 'var(--mantine-color-gray-6)' : 'inherit'
-              }}
-            >
-              {task.title}
-            </Text>
-            {task.locationName && (
-              <Group gap="xs" mt={4}>
-                <MapPin size={14} style={{ color: task.markerColor }} />
-                <Text size="sm" c="dimmed">{task.locationName}</Text>
-              </Group>
-            )}
-          </div>
-          
-          <Text size="sm" c="dimmed">
-            {format(new Date(task.dueDate), 'HH:mm')}
-          </Text>
-        </Group>
-      </UnstyledButton>
-    </Card>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle(task.id);
+          }}
+        >
+          {task.completed ? (
+            <CheckCircle2 className="h-5 w-5 text-green-400" />
+          ) : (
+            <Circle className="h-5 w-5 text-gray-400" />
+          )}
+        </Button>
+        
+        <div className="flex-1">
+          <p className={cn(
+            "text-sm",
+            task.completed ? "text-gray-400 line-through" : "text-white"
+          )}>
+            {task.title}
+          </p>
+          {task.locationName && (
+            <div className="flex items-center gap-1 mt-1">
+              <MapPin className="h-3 w-3" style={{ color: task.markerColor }} />
+              <span className="text-xs text-gray-400">{task.locationName}</span>
+            </div>
+          )}
+        </div>
+        
+        <span className="text-xs text-gray-400">
+          {format(new Date(task.dueDate), 'HH:mm')}
+        </span>
+      </div>
+    </div>
   );
 }

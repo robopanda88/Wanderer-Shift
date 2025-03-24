@@ -22,8 +22,12 @@
     --popover: 224 71% 4%;
     --popover-foreground: 215 20.2% 65.1%;
  
-    --border: 216 34% 17%;
-    --input: 216 34% 17%;
+    --card: 224 71% 4%;
+    --card-foreground: 213 31% 91%;
+ 
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+ 
     --ring: 216 34% 17%;
  
     --radius: 0.75rem;
@@ -32,7 +36,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-white/10;
   }
   body {
     @apply bg-background text-foreground;

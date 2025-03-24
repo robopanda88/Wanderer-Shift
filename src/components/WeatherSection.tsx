@@ -1,5 +1,3 @@
-'use client';
-
 import React from 'react';
 import { format, fromUnixTime } from 'date-fns';
 import { 
@@ -14,8 +12,8 @@ import {
   Sunset
 } from 'lucide-react';
 import { WeatherData } from '@/types';
-import { Paper, Text, Grid, Group, Stack, Card, SimpleGrid } from '@mantine/core';
 import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 interface WeatherSectionProps {
   weather: WeatherData;
@@ -23,7 +21,7 @@ interface WeatherSectionProps {
 
 const getAQILabel = (aqi: number) => {
   const labels = ['Good', 'Fair', 'Moderate', 'Poor', 'Very Poor'];
-  const colors = ['green', 'blue', 'yellow', 'orange', 'red'];
+  const colors = ['text-green-400', 'text-blue-400', 'text-yellow-400', 'text-orange-400', 'text-red-400'];
   return { label: labels[aqi - 1], color: colors[aqi - 1] };
 };
 
@@ -31,161 +29,157 @@ export default function WeatherSection({ weather }: WeatherSectionProps) {
   const { label: aqiLabel, color: aqiColor } = getAQILabel(weather.airQuality.index);
 
   return (
-    <Paper radius="lg" p="xl" withBorder shadow="sm">
-      <Stack>
+    <div className="neomorphic p-6 rounded-xl">
+      <div className="space-y-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Text size="xl" fw={700}>{weather.city.name}, {weather.city.country}</Text>
-          <Group gap="xl" mt="xs">
-            <Group gap="xs">
-              <Sunrise size={16} className="text-orange-400" />
-              <Text size="sm">{format(fromUnixTime(weather.city.sunrise), 'HH:mm')}</Text>
-            </Group>
-            <Group gap="xs">
-              <Sunset size={16} className="text-red-400" />
-              <Text size="sm">{format(fromUnixTime(weather.city.sunset), 'HH:mm')}</Text>
-            </Group>
-          </Group>
+          <h2 className="text-xl font-bold text-white">{weather.city.name}, {weather.city.country}</h2>
+          <div className="flex gap-6 mt-2">
+            <div className="flex items-center gap-2">
+              <Sunrise className="h-4 w-4 text-orange-400" />
+              <span className="text-sm text-gray-300">{format(fromUnixTime(weather.city.sunrise), 'HH:mm')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Sunset className="h-4 w-4 text-red-400" />
+              <span className="text-sm text-gray-300">{format(fromUnixTime(weather.city.sunset), 'HH:mm')}</span>
+            </div>
+          </div>
         </motion.div>
 
-        <Grid>
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <Stack>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Group justify="space-between" align="flex-start">
-                  <div>
-                    <Text size="48" fw={700} style={{ lineHeight: 1 }}>
-                      {weather.temperature.value}°{weather.temperature.unit}
-                    </Text>
-                    <Text size="lg" c="dimmed">
-                      Feels like {weather.temperature.feels_like}°
-                    </Text>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <div className="text-5xl font-bold text-white">
+                    {weather.temperature.value}°{weather.temperature.unit}
                   </div>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  >
-                    <Sun size={48} className="text-yellow-400" />
-                  </motion.div>
-                </Group>
-              </motion.div>
+                  <div className="text-lg text-gray-400">
+                    Feels like {weather.temperature.feels_like}°
+                  </div>
+                </div>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                >
+                  <Sun className="h-12 w-12 text-yellow-400" />
+                </motion.div>
+              </div>
+            </motion.div>
 
-              <SimpleGrid cols={2}>
-                {[
-                  {
-                    icon: <Wind size={20} className="text-blue-400" />,
-                    label: 'Wind',
-                    value: `${weather.wind.speed.value} ${weather.wind.speed.unit}`,
-                    subtext: weather.wind.direction.name
-                  },
-                  {
-                    icon: <Droplets size={20} className="text-blue-500" />,
-                    label: 'Humidity',
-                    value: `${weather.humidity.value}${weather.humidity.unit}`
-                  },
-                  {
-                    icon: <Eye size={20} className="text-gray-500" />,
-                    label: 'Visibility',
-                    value: `${(weather.visibility.value / 1000).toFixed(1)} km`
-                  },
-                  {
-                    icon: <Gauge size={20} className="text-purple-400" />,
-                    label: 'Pressure',
-                    value: `${weather.pressure.value} ${weather.pressure.unit}`
-                  }
-                ].map((item, index) => (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.3 + index * 0.1 }}
-                  >
-                    <Card withBorder padding="md" className="hover:shadow-md transition-shadow">
-                      <Group gap="xs">
-                        {item.icon}
-                        <Text size="sm" c="dimmed">{item.label}</Text>
-                      </Group>
-                      <Text mt="xs">{item.value}</Text>
-                      {item.subtext && (
-                        <Text size="sm" c="dimmed">{item.subtext}</Text>
-                      )}
-                    </Card>
-                  </motion.div>
-                ))}
-              </SimpleGrid>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                {
+                  icon: <Wind className="h-5 w-5 text-blue-400" />,
+                  label: 'Wind',
+                  value: `${weather.wind.speed.value} ${weather.wind.speed.unit}`,
+                  subtext: weather.wind.direction.name
+                },
+                {
+                  icon: <Droplets className="h-5 w-5 text-blue-500" />,
+                  label: 'Humidity',
+                  value: `${weather.humidity.value}${weather.humidity.unit}`
+                },
+                {
+                  icon: <Eye className="h-5 w-5 text-gray-500" />,
+                  label: 'Visibility',
+                  value: `${(weather.visibility.value / 1000).toFixed(1)} km`
+                },
+                {
+                  icon: <Gauge className="h-5 w-5 text-purple-400" />,
+                  label: 'Pressure',
+                  value: `${weather.pressure.value} ${weather.pressure.unit}`
+                }
+              ].map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                >
+                  <div className="glass-card p-4 h-full">
+                    <div className="flex items-center gap-2">
+                      {item.icon}
+                      <span className="text-sm text-gray-400">{item.label}</span>
+                    </div>
+                    <div className="mt-2 text-white">{item.value}</div>
+                    {item.subtext && (
+                      <div className="text-sm text-gray-400">{item.subtext}</div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
 
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7 }}
-              >
-                <Card withBorder className="hover:shadow-md transition-shadow">
-                  <Text fw={500} mb="md">Air Quality</Text>
-                  <Group justify="space-between" mb="sm">
-                    <Text>AQI</Text>
-                    <Text c={aqiColor} fw={500}>{aqiLabel}</Text>
-                  </Group>
-                  <Stack gap="xs">
-                    <Group justify="space-between">
-                      <Text size="sm">PM2.5</Text>
-                      <Text size="sm">{weather.airQuality.components.pm2_5} μg/m³</Text>
-                    </Group>
-                    <Group justify="space-between">
-                      <Text size="sm">PM10</Text>
-                      <Text size="sm">{weather.airQuality.components.pm10} μg/m³</Text>
-                    </Group>
-                  </Stack>
-                </Card>
-              </motion.div>
-            </Stack>
-          </Grid.Col>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+            >
+              <div className="glass-card p-4">
+                <h3 className="text-lg font-medium text-white mb-4">Air Quality</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-gray-400">AQI</span>
+                  <span className={cn("font-medium", aqiColor)}>{aqiLabel}</span>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-400">PM2.5</span>
+                    <span className="text-sm text-white">{weather.airQuality.components.pm2_5} μg/m³</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-400">PM10</span>
+                    <span className="text-sm text-white">{weather.airQuality.components.pm10} μg/m³</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
 
-          <Grid.Col span={{ base: 12, md: 6 }}>
-            <Stack>
-              <Text fw={500}>5-Day Forecast</Text>
-              <Stack gap="xs">
-                {weather.forecast.map((day, index) => (
-                  <motion.div
-                    key={day.dt}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.8 + index * 0.1 }}
-                  >
-                    <Card withBorder className="hover:shadow-md transition-shadow">
-                      <Group justify="space-between">
-                        <Group>
-                          <Text w={80}>{format(fromUnixTime(day.dt), 'EEE')}</Text>
-                          {day.weather.main === 'Clear' ? (
-                            <Sun size={20} className="text-yellow-400" />
-                          ) : day.weather.main === 'Rain' ? (
-                            <CloudRain size={20} className="text-blue-400" />
-                          ) : (
-                            <Cloud size={20} className="text-gray-400" />
-                          )}
-                        </Group>
-                        <Group gap="md">
-                          <Text c="dimmed">{Math.round(day.pop * 100)}%</Text>
-                          <Group gap="xs">
-                            <Text>{Math.round(day.temp.min)}°</Text>
-                            <Text c="dimmed">-</Text>
-                            <Text>{Math.round(day.temp.max)}°</Text>
-                          </Group>
-                        </Group>
-                      </Group>
-                    </Card>
-                  </motion.div>
-                ))}
-              </Stack>
-            </Stack>
-          </Grid.Col>
-        </Grid>
-      </Stack>
-    </Paper>
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-white">5-Day Forecast</h3>
+            <div className="space-y-3">
+              {weather.forecast.map((day, index) => (
+                <motion.div
+                  key={day.dt}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + index * 0.1 }}
+                >
+                  <div className="glass-card p-4">
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <span className="w-20 text-gray-400">{format(fromUnixTime(day.dt), 'EEE')}</span>
+                        {day.weather.main === 'Clear' ? (
+                          <Sun className="h-5 w-5 text-yellow-400" />
+                        ) : day.weather.main === 'Rain' ? (
+                          <CloudRain className="h-5 w-5 text-blue-400" />
+                        ) : (
+                          <Cloud className="h-5 w-5 text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-gray-400">{Math.round(day.pop * 100)}%</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-white">{Math.round(day.temp.min)}°</span>
+                          <span className="text-gray-400">-</span>
+                          <span className="text-white">{Math.round(day.temp.max)}°</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
