@@ -8,7 +8,6 @@ import WeatherSection from '@/components/WeatherSection';
 import TodoSection from '@/components/TodoSection';
 import { Message, WeatherData, Location, Task } from '@/types';
 import { getChatResponse } from '@/lib/gemini';
-import { Container, Grid } from '@mantine/core';
 
 // Dynamically import MapSection with no SSR to avoid leaflet window issues
 const MapSection = dynamic(() => import('@/components/MapSection'), {
@@ -18,7 +17,7 @@ const MapSection = dynamic(() => import('@/components/MapSection'), {
   ),
 });
 
-// Mock tasks data
+// Mock tasks data remains unchanged
 const mockTasks: Task[] = [
   {
     id: '1',
@@ -59,7 +58,7 @@ function Home() {
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [locationLoaded, setLocationLoaded] = useState<boolean>(false);
 
-  // Mock weather data (unchanged)
+  // Mock weather data
   const mockWeather: WeatherData = {
     city: {
       name: "London",
@@ -227,8 +226,8 @@ function Home() {
     try {
       const response = await getChatResponse(
         content,
-        tempMarker ? [tempMarker.lat, tempMarker.lng] : undefined, // Updated to lat, lng order
-        currentLocation ? [currentLocation.lat, currentLocation.lng] : undefined // Pass current location
+        tempMarker ? [tempMarker.lat, tempMarker.lng] : undefined,
+        currentLocation ? [currentLocation.lat, currentLocation.lng] : undefined
       );
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -283,46 +282,42 @@ function Home() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
       <Header />
       <main className="pt-16">
-        <Container size="xl" py="xl">
-          <Grid gutter="xl">
-            <Grid.Col span={{ base: 12, lg: 8 }}>
-              <div className="space-y-6">
-                <div className="h-[400px] relative">
-                  <MapSection
-                    location={location}
-                    tasks={tasks}
-                    selectedTask={selectedTask}
-                    onTempMarkerChange={setTempMarker}
-                    onCurrentLocationChange={handleLocationChange} // Added to get current location
-                  />
-                </div>
-                {locationLoaded && currentLocation ? (
-                  <ChatWindow
-                    messages={messages}
-                    onSendMessage={handleSendMessage}
-                    currentLocation={currentLocation} // Pass currentLocation to ChatWindow
-                  />
-                ) : (
-                  <div className="h-[calc(100vh-400px-6rem)] flex items-center justify-center text-white bg-slate-800 rounded-lg">
-                    Loading location... Please wait.
-                  </div>
-                )}
-              </div>
-            </Grid.Col>
-            
-            <Grid.Col span={{ base: 12, lg: 4 }}>
-              <div className="space-y-6">
-                <TodoSection
+        <div className="container py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-8 gap-6">
+            <div className="lg:col-span-5 space-y-6">
+              <div className="h-[400px] relative">
+                <MapSection
+                  location={location}
                   tasks={tasks}
-                  onTaskToggle={handleTaskToggle}
-                  onTaskSelect={handleTaskSelect}
                   selectedTask={selectedTask}
+                  onTempMarkerChange={setTempMarker}
+                  onCurrentLocationChange={handleLocationChange}
                 />
-                <WeatherSection weather={mockWeather} />
               </div>
-            </Grid.Col>
-          </Grid>
-        </Container>
+              {locationLoaded && currentLocation ? (
+                <ChatWindow
+                  messages={messages}
+                  onSendMessage={handleSendMessage}
+                  currentLocation={currentLocation}
+                />
+              ) : (
+                <div className="h-[calc(100vh-400px-6rem)] flex items-center justify-center text-white bg-slate-800 rounded-lg">
+                  Loading location... Please wait.
+                </div>
+              )}
+            </div>
+            
+            <div className="lg:col-span-3 space-y-6">
+              <TodoSection
+                tasks={tasks}
+                onTaskToggle={handleTaskToggle}
+                onTaskSelect={handleTaskSelect}
+                selectedTask={selectedTask}
+              />
+              <WeatherSection weather={mockWeather} />
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   );

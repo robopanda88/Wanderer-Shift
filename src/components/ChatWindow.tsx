@@ -3,8 +3,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2 } from 'lucide-react';
 import { Message, Location } from '@/types';
-import { Paper, TextInput, Button, ScrollArea, Card, Text, Group, Stack, Box, Code } from '@mantine/core';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface ChatWindowProps {
   messages: Message[];
@@ -38,25 +40,18 @@ export default function ChatWindow({ messages, onSendMessage, currentLocation }:
   }, [messages]);
 
   return (
-    <Paper radius="lg" className="h-[600px]" withBorder shadow="md">
-      <Stack h="100%" gap={0}>
-        <Group
-          p="md"
-          bg="blue.6"
-          style={{
-            borderTopLeftRadius: 'var(--mantine-radius-lg)',
-            borderTopRightRadius: 'var(--mantine-radius-lg)',
-          }}
-        >
-          <Bot size={24} className="text-white" />
+    <div className="neomorphic h-[600px] overflow-hidden">
+      <div className="flex h-full flex-col">
+        <div className="flex items-center gap-3 border-b border-white/5 bg-secondary/30 px-6 py-4">
+          <Bot size={24} className="text-primary" />
           <div>
-            <Text size="lg" fw={600} c="white">Travel Assistant</Text>
-            <Text size="sm" c="white" opacity={0.9}>Ask me anything about weather and travel</Text>
+            <h2 className="text-lg font-semibold text-primary">Travel Assistant</h2>
+            <p className="text-sm text-muted-foreground">Ask me anything about weather and travel</p>
           </div>
-        </Group>
+        </div>
 
-        <ScrollArea h="calc(100% - 140px)" p="md" viewportRef={scrollAreaRef}>
-          <Stack gap="md">
+        <ScrollArea className="flex-1 p-6" ref={scrollAreaRef}>
+          <div className="space-y-4">
             <AnimatePresence>
               {messages.map((message) => (
                 <motion.div
@@ -66,25 +61,19 @@ export default function ChatWindow({ messages, onSendMessage, currentLocation }:
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <Card
-                    withBorder
-                    radius="md"
-                    padding="sm"
-                    style={{
-                      maxWidth: '80%',
-                      marginLeft: message.sender === 'user' ? 'auto' : 0,
-                      backgroundColor: message.sender === 'user' ? 'var(--mantine-color-blue-6)' : 'var(--mantine-color-gray-0)',
-                    }}
-                  >
-                    <Text c={message.sender === 'user' ? 'white' : 'dark'}>
-                      {message.content}
-                    </Text>
-                    {message.data && (
-                      <Code block mt="xs" style={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}>
-                        {JSON.stringify(message.data, null, 2)}
-                      </Code>
+                  <div
+                    className={cn(
+                      "glass-card max-w-[80%] px-4 py-3",
+                      message.sender === 'user' ? 'ml-auto bg-primary/10' : 'mr-auto bg-secondary/30'
                     )}
-                  </Card>
+                  >
+                    <p className="text-sm text-foreground">{message.content}</p>
+                    {message.data && (
+                      <pre className="mt-2 rounded bg-secondary/20 p-2 text-xs">
+                        {JSON.stringify(message.data, null, 2)}
+                      </pre>
+                    )}
+                  </div>
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -94,39 +83,36 @@ export default function ChatWindow({ messages, onSendMessage, currentLocation }:
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                className="flex items-center gap-2 text-muted-foreground"
               >
-                <Box style={{ maxWidth: '80%' }}>
-                  <Group gap="xs">
-                    <Loader2 size={16} className="animate-spin text-blue-500" />
-                    <Text size="sm" c="dimmed">Assistant is typing...</Text>
-                  </Group>
-                </Box>
+                <Loader2 size={16} className="animate-spin" />
+                <span className="text-sm">Assistant is typing...</span>
               </motion.div>
             )}
-          </Stack>
+          </div>
         </ScrollArea>
 
-        <form onSubmit={handleSubmit} style={{ borderTop: '1px solid var(--mantine-color-gray-2)' }}>
-          <Group p="md" gap="sm" align="flex-start">
-            <TextInput
-              placeholder="Ask about weather, attractions, or travel tips..."
+        <form onSubmit={handleSubmit} className="border-t border-white/5 p-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              style={{ flex: 1 }}
-              radius="md"
+              placeholder="Ask about weather, attractions, or travel tips..."
+              className="glass-input flex-1"
               disabled={isTyping}
             />
             <Button
               type="submit"
-              variant="filled"
-              radius="md"
-              loading={isTyping}
+              variant="neomorphic"
+              size="icon"
+              disabled={isTyping}
             >
-              <Send size={20} />
+              <Send size={18} />
             </Button>
-          </Group>
+          </div>
         </form>
-      </Stack>
-    </Paper>
+      </div>
+    </div>
   );
 }
