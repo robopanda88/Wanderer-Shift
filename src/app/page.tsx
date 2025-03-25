@@ -6,7 +6,7 @@ import Header from '@/components/Header';
 import ChatWindow from '@/components/ChatWindow';
 import WeatherSection from '@/components/WeatherSection';
 import TodoSection from '@/components/TodoSection';
-import { Message, Location, Task } from '@/types';
+import { Message, Location, Task, POI } from '@/types';
 import { getChatResponse } from '@/lib/gemini';
 
 const MapSection = dynamic(() => import('@/components/MapSection'), {
@@ -15,14 +15,6 @@ const MapSection = dynamic(() => import('@/components/MapSection'), {
     <div className="h-[400px] relative bg-slate-800/50 rounded-lg animate-pulse" />
   ),
 });
-
-interface POI {
-  id: string;
-  lat: number;
-  lng: number;
-  name: string;
-  category: string;
-}
 
 const mockTasks: Task[] = [
   {
@@ -93,8 +85,8 @@ function Home() {
     try {
       const response = await getChatResponse(
         content,
-        tempMarker ? [tempMarker.lng, tempMarker.lat] : undefined, // [lon, lat]
-        currentLocation ? [currentLocation.lng, currentLocation.lat] : undefined // [lon, lat]
+        tempMarker ? [tempMarker.lng, tempMarker.lat] : undefined,
+        currentLocation ? [currentLocation.lng, currentLocation.lat] : undefined
       );
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
@@ -105,14 +97,19 @@ function Home() {
       };
       setMessages((prev) => [...prev, botResponse]);
 
-      // Update POIs if present
       if (response.data) {
-        setPois(response.data.pois);
+        setPois(response.data.pois.map(poi => ({
+          id: poi.id.toString(),
+          lat: poi.lat,
+          lng: poi.lon,
+          name: poi.tags.name || 'Unnamed',
+          category: poi.tags.amenity || poi.tags.leisure || poi.tags.tourism || 'unknown',
+        })));
         setSearchCenter(response.data.center);
-        setSearchRadius(response.data.radiusKm * 1000); // Convert km to meters
+        setSearchRadius(response.data.radiusKm * 1000);
       }
 
-      return response; // For ChatWindow
+      return response;
     } catch (error) {
       console.error('Home: Error getting chat response:', error);
       setMessages((prev) => [
@@ -152,7 +149,7 @@ function Home() {
   const handlePOIsUpdated = (pois: POI[], center: Location, radiusKm: number) => {
     setPois(pois);
     setSearchCenter(center);
-    setSearchRadius(radiusKm * 1000); // Convert km to meters
+    setSearchRadius(radiusKm * 1000);
   };
 
   if (!isClient) {

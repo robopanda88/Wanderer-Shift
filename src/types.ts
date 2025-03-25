@@ -4,6 +4,7 @@ export interface Message {
   sender: 'user' | 'bot';
   timestamp: Date;
   data?: any;
+  weatherData?: any;
 }
 
 export interface WeatherData {
@@ -93,4 +94,12 @@ export interface Task {
   location?: Location;
   locationName?: string;
   markerColor: string;
+}
+
+export interface POI {
+  id: string;
+  lat: number;
+  lng: number;
+  name: string;
+  category: string;
 }

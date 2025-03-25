@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Location, Task } from '@/types';
+import { Location, Task, POI } from '@/types';
 import L from 'leaflet';
 import { X, Navigation, Plus, Cloud, Gauge, Wind, Thermometer, Droplets, Map } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -39,9 +39,32 @@ const tempMarkerIcon = new L.Icon({
   iconAnchor: [18, 36],
 });
 
+const createPOIMarkerIcon = (category: string) => {
+  const categoryStyles: { [key: string]: { color: string; emoji: string } } = {
+    attraction: { color: '#FFD700', emoji: '🌟' },
+    restaurant: { color: '#FF5733', emoji: '🍴' },
+    park: { color: '#28A745', emoji: '🌳' },
+    pub: { color: '#8B4513', emoji: '🍺' },
+    museum: { color: '#6A5ACD', emoji: '🏛️' },
+    unknown: { color: '#17A2B8', emoji: '📍' },
+  };
+
+  const { color, emoji } = categoryStyles[category.toLowerCase()] || categoryStyles.unknown;
+  return L.divIcon({
+    className: 'poi-marker',
+    html: `
+      <div style="width: 30px; height: 30px; background-color: ${color}; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;">
+        <span style="font-size: 16px;">${emoji}</span>
+      </div>
+    `,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -15],
+  });
+};
+
 const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY || '';
 
-// Define type for tile layers using LucideIcon directly
 interface TileLayerConfig {
   url: string;
   icon: LucideIcon;
@@ -49,38 +72,31 @@ interface TileLayerConfig {
   label: string;
 }
 
-interface POI {
-  id: string;
-  lat: number;
-  lng: number;
-  name: string;
-  category: string;
-}
-
 const tileLayers: Record<string, TileLayerConfig> = {
   base: { url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', icon: Map, color: 'text-blue-400', label: 'Base Map' },
-  clouds: { url: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY}`, icon: Cloud, color: 'text-gray-400', label: 'Cloud Cover' },
-  pressure: { url: `https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY}`, icon: Gauge, color: 'text-purple-400', label: 'Sea Level Pressure' },
-  wind: { url: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY}`, icon: Wind, color: 'text-teal-400', label: 'Wind Speed' },
-  temperature: { url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY}`, icon: Thermometer, color: 'text-red-400', label: 'Temperature' },
-  precipitation: { url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${process.env.NEXT_PUBLIC_OPENWEATHERMAP_API_KEY}`, icon: Droplets, color: 'text-blue-500', label: 'Precipitation' },
+  clouds: { url: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${API_KEY}`, icon: Cloud, color: 'text-gray-400', label: 'Cloud Cover' },
+  pressure: { url: `https://tile.openweathermap.org/map/pressure_new/{z}/{x}/{y}.png?appid=${API_KEY}`, icon: Gauge, color: 'text-purple-400', label: 'Sea Level Pressure' },
+  wind: { url: `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${API_KEY}`, icon: Wind, color: 'text-teal-400', label: 'Wind Speed' },
+  temperature: { url: `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${API_KEY}`, icon: Thermometer, color: 'text-red-400', label: 'Temperature' },
+  precipitation: { url: `https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${API_KEY}`, icon: Droplets, color: 'text-blue-500', label: 'Precipitation' },
 };
 
-const createPOIMarkerIcon = (category: string) => {
-  const color = {
-    'attraction': '#FFD700', // Gold for attractions
-    'restaurant': '#FF5733', // Orange for restaurants
-    'park': '#28A745', // Green for parks
-    'pub': '#8B4513', // Brown for pubs
-    'museum': '#6A5ACD', // Slate blue for museums
-  }[category] || '#17A2B8'; // Teal default
-  return L.divIcon({
-    className: 'poi-marker',
-    html: `<div style="width: 30px; height: 30px; background-color: ${color}; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.5);"></div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -15],
+const MapEventsHandler: React.FC<{
+  isTaggingMode: boolean;
+  setTempMarker: (loc: Location | null) => void;
+  onTempMarkerChange?: (marker: Location | null) => void;
+}> = ({ isTaggingMode, setTempMarker, onTempMarkerChange }) => {
+  useMapEvents({
+    click(e) {
+      if (isTaggingMode) {
+        const newMarker = { lat: e.latlng.lat, lng: e.latlng.lng };
+        console.log('MapSection: Setting temporary marker at:', newMarker);
+        setTempMarker(newMarker);
+        onTempMarkerChange?.(newMarker);
+      }
+    },
   });
+  return null;
 };
 
 export default function MapSection({ 
@@ -132,6 +148,7 @@ export default function MapSection({
   const handleThingsToDo = async (query: string) => {
     if (!onSearchThingsToDo || !userLocation) return;
 
+    console.log('MapSection: Searching for things to do with query:', query);
     const { content, data } = await onSearchThingsToDo(query);
     if (data) {
       const { pois: rawPois, center, radiusKm } = data;
@@ -142,17 +159,21 @@ export default function MapSection({
         name: poi.tags.name || 'Unnamed',
         category: poi.tags.amenity || poi.tags.leisure || poi.tags.tourism || 'unknown',
       }));
+      console.log('MapSection: Setting POIs:', mappedPois);
       setPois(mappedPois);
       setSearchCenter(center);
-      setSearchRadius(radiusKm * 1000); // Convert km to meters
+      setSearchRadius(radiusKm * 1000);
 
       if (mapRef.current) {
+        console.log('MapSection: Flying to center:', center, 'with radius:', radiusKm);
         mapRef.current.flyTo([center.lat, center.lng], 12, { duration: 1 });
         setActiveLayer('base');
         Object.keys(loadedLayers).forEach(key => {
           if (loadedLayers[key]) mapRef.current?.removeLayer(loadedLayers[key]);
         });
       }
+    } else {
+      console.log('MapSection: No data returned from search');
     }
   };
 
@@ -253,9 +274,18 @@ export default function MapSection({
           <Circle
             center={[searchCenter.lat, searchCenter.lng]}
             radius={searchRadius}
-            pathOptions={{ color: '#4285F4', fillColor: '#A0C5F9', fillOpacity: 0.2 }}
+            pathOptions={{
+              color: '#4285F4', // Always blue, no temp marker dependency
+              fillColor: '#A0C5F9',
+              fillOpacity: 0.2,
+            }}
           />
         )}
+        <MapEventsHandler
+          isTaggingMode={isTaggingMode}
+          setTempMarker={setTempMarker}
+          onTempMarkerChange={onTempMarkerChange}
+        />
       </MapContainer>
 
       {/* Controls */}
@@ -285,7 +315,7 @@ export default function MapSection({
           <Plus size={20} className={isTaggingMode ? "rotate-45" : ""} />
         </button>
         <button
-          onClick={() => handleThingsToDo('Things to do in current location?')}
+          onClick={() => handleThingsToDo('Things to do in this location')}
           className={cn("neomorphic w-10 h-10 rounded-full flex items-center justify-center shadow-md bg-teal-500 text-white hover:bg-teal-600 transition-all duration-200 glow-teal-500")}
           title="Find things to do at current location"
         >
